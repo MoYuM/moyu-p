@@ -2,10 +2,10 @@ import { useState, useCallback, useEffect, useRef } from "react"
 import { useMessage } from "@plasmohq/messaging/hook"
 import { sendToBackground } from "@plasmohq/messaging"
 import { MESSAGE_ENUM } from "../const"
+import { useKeyPress } from "ahooks"
 import debouncePromise from "debounce-promise"
 import cssText from "data-text:~style.css"
 import clsx from "clsx"
-import { useKeyPress } from "ahooks"
 
 export const getStyle = () => {
   const style = document.createElement("style")
@@ -22,10 +22,14 @@ const Popup = () => {
   const [activeIndex, setActiveIndex] = useState(0)
 
   const inputRef = useRef<HTMLInputElement>(null)
+  const isMoved = useRef(false)
 
   useMessage(({ name }) => {
-    if (name === OPEN_POPUP) {
-      setOpen(true)
+    if (!open && name === OPEN_POPUP) {
+      handleOpen()
+    }
+    if (open && name === OPEN_POPUP) {
+      setActiveIndex(prev => (prev + 1) % list.length)
     }
   })
 
@@ -39,28 +43,63 @@ const Popup = () => {
     debouncedSearch(searchQuery)
   }, [searchQuery])
 
-  useKeyPress("uparrow", () => {
+  useKeyPress(["uparrow", "downarrow", "esc", "enter"], (_, key) => {
+    if (key === "uparrow") {
+      handlePrev();
+    }
+    if (key === "downarrow") {
+      handleNext();
+    }
+    if (key === 'enter') {
+      handleSwitchTab(list[activeIndex].id)
+    }
+    if (key === 'esc') {
+      handleClose();
+    }
+  })
+
+  useKeyPress(["ctrl", "ctrl.p"], (e) => {
+    if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && !open) {
+      handleOpen();
+    }
+    if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && open) {
+      isMoved.current = true;
+      handleNext();
+    }
+    if (e.type === 'keyup' && e.key === 'Control' && open) {
+      if (isMoved.current) {
+        handleSwitchTab(list[activeIndex].id);
+      }
+    }
+  }, {
+    events: ['keydown', 'keyup']
+  })
+
+  const handlePrev = () => {
     setActiveIndex(prev => (prev - 1 + list.length) % list.length)
-  })
+  }
 
-  useKeyPress("downarrow", () => {
+  const handleNext = () => {
     setActiveIndex(prev => (prev + 1) % list.length)
-  })
+  }
 
-  useKeyPress("enter", () => {
-    handleSwitchTab(list[activeIndex].id)
-  })
+  const handleOpen = async () => {
+    setOpen(true)
+    handleSearch();
+   }
 
   const handleClose = () => {
     setOpen(false)
+    setList([])
+    isMoved.current = false;
   }
 
-  const handleSearch = async (keyword: string) => {
-    const res = await sendToBackground({
+  const handleSearch = async (keyword?: string) => {
+    const { tabs } = await sendToBackground({
       name: "search-tabs",
       body: { keyword }
     })
-    setList(res.tabs)
+    setList(tabs)
   }
 
   const handleSwitchTab = (tabId: number) => {
@@ -86,16 +125,16 @@ const Popup = () => {
         <div className="flex">
           <input
             ref={inputRef}
-            className="w-full h-10 rounded-md border-gray-300 border"
+            className="w-full h-10 rounded-md border-gray-300 border px-2"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className="p-4 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
           {list?.map((item, index) => (
             <div
               key={item.id}
-              className={clsx("flex items-center gap-2", index === activeIndex && "bg-gray-100")}
+              className={clsx("flex items-center gap-2 p-2 rounded-md", index === activeIndex && "bg-gray-100")}
               onClick={() => handleSwitchTab(item.id)}
             >
               <img src={item.favIconUrl} className="w-4 h-4" />

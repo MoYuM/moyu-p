@@ -17,6 +17,12 @@ const handler: PlasmoMessaging.MessageHandler<
 
   const tabs = await chrome.tabs.query({})
 
+  // 如果 keyword 为空，则返回所有 tabs
+  if (!keyword) {
+    res.send({ tabs })
+    return
+  }
+
   const fuse = new Fuse(tabs, {
     includeScore: true,
     threshold: 0.2,
