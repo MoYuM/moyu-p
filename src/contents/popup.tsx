@@ -34,12 +34,6 @@ const Popup = () => {
   })
 
   useEffect(() => {
-    if (open) {
-      inputRef.current?.focus();
-    }
-  }, [open])
-
-  useEffect(() => {
     debouncedSearch(searchQuery)
   }, [searchQuery])
 
@@ -85,11 +79,14 @@ const Popup = () => {
 
   const handleOpen = async () => {
     setOpen(true)
-    handleSearch();
-   }
+    await handleSearch();
+    inputRef.current?.focus();
+  }
 
   const handleClose = () => {
     setOpen(false)
+    setSearchQuery("")
+    setActiveIndex(0)
     setList([])
     isMoved.current = false;
   }
@@ -134,8 +131,9 @@ const Popup = () => {
           {list?.map((item, index) => (
             <div
               key={item.id}
-              className={clsx("flex items-center gap-2 p-2 rounded-md", index === activeIndex && "bg-gray-100")}
+              className={clsx("flex items-center gap-2 p-2 rounded-md cursor-pointer", index === activeIndex && "bg-gray-100")}
               onClick={() => handleSwitchTab(item.id)}
+              onMouseOver={() => setActiveIndex(index)}
             >
               <img src={item.favIconUrl} className="w-4 h-4" />
               <div>{item.title}</div>
