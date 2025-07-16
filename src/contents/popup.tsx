@@ -7,6 +7,18 @@ import debouncePromise from "debounce-promise"
 import cssText from "data-text:~style.css"
 import clsx from "clsx"
 
+// 搜索结果类型
+type SearchResult = {
+  type: 'tab' | 'history' | 'bookmark'
+  id: string
+  title: string
+  url: string
+  lastAccessed?: number
+  lastVisitTime?: number
+  dateAdded?: number
+  favicon?: string
+}
+
 export const getStyle = () => {
   const style = document.createElement("style")
   style.textContent = cssText
@@ -17,7 +29,7 @@ const { OPEN_POPUP } = MESSAGE_ENUM
 
 const Popup = () => {
   const [open, setOpen] = useState(false)
-  const [list, setList] = useState<chrome.tabs.Tab[]>([])
+  const [list, setList] = useState<SearchResult[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)
 
@@ -45,7 +57,7 @@ const Popup = () => {
       handleNext();
     }
     if (key === 'enter') {
-      handleSwitchTab(list[activeIndex].id)
+      handleOpenResult(list[activeIndex])
     }
     if (key === 'esc') {
       handleClose();
@@ -62,7 +74,7 @@ const Popup = () => {
     }
     if (e.type === 'keyup' && e.key === 'Control' && open) {
       if (isMoved.current) {
-        handleSwitchTab(list[activeIndex].id);
+        handleOpenResult(list[activeIndex]);
       }
     }
   }, {
@@ -92,22 +104,48 @@ const Popup = () => {
   }
 
   const handleSearch = async (keyword?: string) => {
-    const { tabs } = await sendToBackground({
-      name: "search-tabs",
+    const { results } = await sendToBackground({
+      name: "search-all",
       body: { keyword }
     })
-    setList(tabs)
+    setList(results)
   }
 
-  const handleSwitchTab = (tabId: number) => {
+  const handleOpenResult = (item: SearchResult) => {
     sendToBackground({
-      name: "switch-tab",
-      body: { tabId }
+      name: "open-result",
+      body: { 
+        type: item.type,
+        id: item.id,
+        url: item.url
+      }
     })
     handleClose();
   }
 
   const debouncedSearch = useCallback(debouncePromise(handleSearch, 200), [])
+
+  // 根据搜索结果类型获取图标
+  const getResultIcon = (item: SearchResult) => {
+    switch (item.type) {
+      case 'tab':
+        return item.favicon ? (
+          <img src={item.favicon} className="w-4 h-4" alt="tab" />
+        ) : (
+          <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center text-white text-xs">T</div>
+        )
+      case 'history':
+        return (
+          <div className="w-4 h-4 bg-gray-500 rounded-sm flex items-center justify-center text-white text-xs">H</div>
+        )
+      case 'bookmark':
+        return (
+          <div className="w-4 h-4 bg-yellow-500 rounded-sm flex items-center justify-center text-white text-xs">B</div>
+        )
+      default:
+        return <div className="w-4 h-4 bg-gray-300 rounded-sm"></div>
+    }
+  }
 
   return (
     <div
@@ -132,11 +170,11 @@ const Popup = () => {
             <div
               key={item.id}
               className={clsx("flex items-center gap-2 p-2 rounded-md cursor-pointer", index === activeIndex && "bg-gray-100")}
-              onClick={() => handleSwitchTab(item.id)}
+              onClick={() => handleOpenResult(item)}
               onMouseOver={() => setActiveIndex(index)}
             >
-              <img src={item.favIconUrl} className="w-4 h-4" />
-              <div>{item.title}</div>
+              {getResultIcon(item)}
+              <div className="flex-1 truncate">{item.title}</div>
             </div>
           ))}
         </div>
