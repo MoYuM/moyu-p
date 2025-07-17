@@ -7,6 +7,8 @@ import debouncePromise from "debounce-promise"
 import cssText from "data-text:~style.css"
 import clsx from "clsx"
 
+import DEFAULT_ICON from "data-base64:~assets/icon.png"
+
 // 搜索结果类型
 type SearchResult = {
   type: 'tab' | 'history' | 'bookmark'
@@ -17,6 +19,7 @@ type SearchResult = {
   lastVisitTime?: number
   dateAdded?: number
   favicon?: string
+  faviconDataUrl?: string
 }
 
 export const getStyle = () => {
@@ -27,14 +30,68 @@ export const getStyle = () => {
 
 const { OPEN_POPUP } = MESSAGE_ENUM
 
+// 新增：FaviconImg 组件，内部处理代理逻辑
+const FaviconImg = ({ url }: { url?: string }) => {
+  const [src, setSrc] = useState(() => {
+    if (!url) return DEFAULT_ICON
+    const cached = url ? localStorage.getItem('favicon_cache_' + url) : null
+    return cached || url || DEFAULT_ICON
+  })
+  const [triedProxy, setTriedProxy] = useState(false)
+
+  const handleError = async () => {
+    if (!url || triedProxy) {
+      setSrc(DEFAULT_ICON)
+      return
+    }
+    setTriedProxy(true)
+    // 先查缓存
+    const cacheKey = 'favicon_cache_' + url
+    const cached = localStorage.getItem(cacheKey)
+    if (cached) {
+      setSrc(cached)
+      return
+    }
+    try {
+      const { dataUrl } = await sendToBackground({
+        name: "fetch-favicon",
+        body: { url }
+      })
+      if (dataUrl) {
+        setSrc(dataUrl)
+        localStorage.setItem(cacheKey, dataUrl)
+      } else {
+        setSrc(DEFAULT_ICON)
+        localStorage.setItem(cacheKey, DEFAULT_ICON)
+      }
+    } catch {
+      setSrc(DEFAULT_ICON)
+      localStorage.setItem(cacheKey, DEFAULT_ICON)
+    }
+  }
+
+  return (
+    <img
+      src={src}
+      className="w-4 h-4 rounded"
+      alt="tab"
+      onError={e => { e.currentTarget.onerror = null; handleError() }}
+    />
+  )
+}
+
 const Popup = () => {
   const [open, setOpen] = useState(false)
   const [list, setList] = useState<SearchResult[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)
+  // 新增：区分键盘/鼠标导航
+  const [isKeyboardNav, setIsKeyboardNav] = useState(true)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const isMoved = useRef(false)
+  // 新增：每个结果项的ref
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
 
   useMessage(({ name }) => {
     if (!open && name === OPEN_POPUP) {
@@ -49,11 +106,28 @@ const Popup = () => {
     debouncedSearch(searchQuery)
   }, [searchQuery])
 
+  // 新增：搜索内容变化时，activeIndex 归零
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [searchQuery])
+
+  // 新增：activeIndex 变化时自动滚动到可见
+  useEffect(() => {
+    if (itemRefs.current[activeIndex]) {
+      itemRefs.current[activeIndex]?.scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+      })
+    }
+  }, [activeIndex])
+
   useKeyPress(["uparrow", "downarrow", "esc", "enter"], (_, key) => {
     if (key === "uparrow") {
+      setIsKeyboardNav(true)
       handlePrev();
     }
     if (key === "downarrow") {
+      setIsKeyboardNav(true)
       handleNext();
     }
     if (key === 'enter') {
@@ -114,7 +188,7 @@ const Popup = () => {
   const handleOpenResult = (item: SearchResult) => {
     sendToBackground({
       name: "open-result",
-      body: { 
+      body: {
         type: item.type,
         id: item.id,
         url: item.url
@@ -127,23 +201,16 @@ const Popup = () => {
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
+    // 其余类型也显示 icon
     switch (item.type) {
       case 'tab':
-        return item.favicon ? (
-          <img src={item.favicon} className="w-4 h-4" alt="tab" />
-        ) : (
-          <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center text-white text-xs">T</div>
-        )
+        return <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center text-white text-xs">T</div>
       case 'history':
-        return (
-          <div className="w-4 h-4 bg-gray-500 rounded-sm flex items-center justify-center text-white text-xs">H</div>
-        )
+        return <div className="w-4 h-4 bg-gray-500 rounded-sm flex items-center justify-center text-white text-xs">H</div>
       case 'bookmark':
-        return (
-          <div className="w-4 h-4 bg-yellow-500 rounded-sm flex items-center justify-center text-white text-xs">B</div>
-        )
+        return <div className="w-4 h-4 bg-yellow-500 rounded-sm flex items-center justify-center text-white text-xs">B</div>
       default:
-        return <div className="w-4 h-4 bg-gray-300 rounded-sm"></div>
+        return <div className="w-4 h-4 bg-gray-300 rounded-sm flex items-center justify-center text-white text-xs">?</div>
     }
   }
 
@@ -154,27 +221,46 @@ const Popup = () => {
       onClick={handleClose}
     >
       <div
-        className="absolute left-1/4 top-1/4 w-1/2 p-4 flex flex-col gap-2 bg-white rounded-lg shadow-lg"
+        className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[480px] p-4 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* 搜索框：无边框、无focus样式 */}
         <div className="flex">
           <input
             ref={inputRef}
-            className="w-full h-10 rounded-md border-gray-300 border px-2"
+            className="w-full h-12 rounded-xl px-4 text-lg outline-none border-none focus:ring-0 shadow-none bg-gray-100 placeholder-gray-400"
+            style={{ boxShadow: 'none', border: 'none' }}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="搜索标签页、历史、书签..."
+            autoFocus
           />
         </div>
-        <div className="flex flex-col gap-2">
+        {/* 结果列表：高度固定、滚动、重阴影 */}
+        <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl bg-white" style={{ maxHeight: 320, minHeight: 120 }}>
           {list?.map((item, index) => (
             <div
               key={item.id}
-              className={clsx("flex items-center gap-2 p-2 rounded-md cursor-pointer", index === activeIndex && "bg-gray-100")}
+              ref={el => itemRefs.current[index] = el}
+              className={clsx(
+                "flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                index === activeIndex ? "bg-gray-200" : "hover:bg-gray-100"
+              )}
               onClick={() => handleOpenResult(item)}
-              onMouseOver={() => setActiveIndex(index)}
+              onMouseOver={() => {
+                // 只有鼠标导航时才允许 setActiveIndex
+                if (!isKeyboardNav) setActiveIndex(index)
+              }}
+              onMouseDown={() => setIsKeyboardNav(false)}
             >
-              {getResultIcon(item)}
-              <div className="flex-1 truncate">{item.title}</div>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <FaviconImg url={item.favicon} />
+                <div className="truncate flex-1 text-base font-medium">{item.title}</div>
+                {/* 类型图标 */}
+                {getResultIcon(item)}
+              </div>
+              {/* 快捷键占位 */}
+              <div className="text-xs text-gray-400 w-12 text-right select-none">⌘1</div>
             </div>
           ))}
         </div>
