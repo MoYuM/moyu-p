@@ -7,7 +7,8 @@ import debouncePromise from "debounce-promise"
 import cssText from "data-text:~style.css"
 import clsx from "clsx"
 
-import DEFAULT_ICON from "data-base64:~assets/icon.png"
+import FaviconImg from "./components/faviconImg"
+
 
 // 搜索结果类型
 type SearchResult = {
@@ -29,56 +30,6 @@ export const getStyle = () => {
 }
 
 const { OPEN_POPUP } = MESSAGE_ENUM
-
-// 新增：FaviconImg 组件，内部处理代理逻辑
-const FaviconImg = ({ url }: { url?: string }) => {
-  const [src, setSrc] = useState(() => {
-    if (!url) return DEFAULT_ICON
-    const cached = url ? localStorage.getItem('favicon_cache_' + url) : null
-    return cached || url || DEFAULT_ICON
-  })
-  const [triedProxy, setTriedProxy] = useState(false)
-
-  const handleError = async () => {
-    if (!url || triedProxy) {
-      setSrc(DEFAULT_ICON)
-      return
-    }
-    setTriedProxy(true)
-    // 先查缓存
-    const cacheKey = 'favicon_cache_' + url
-    const cached = localStorage.getItem(cacheKey)
-    if (cached) {
-      setSrc(cached)
-      return
-    }
-    try {
-      const { dataUrl } = await sendToBackground({
-        name: "fetch-favicon",
-        body: { url }
-      })
-      if (dataUrl) {
-        setSrc(dataUrl)
-        localStorage.setItem(cacheKey, dataUrl)
-      } else {
-        setSrc(DEFAULT_ICON)
-        localStorage.setItem(cacheKey, DEFAULT_ICON)
-      }
-    } catch {
-      setSrc(DEFAULT_ICON)
-      localStorage.setItem(cacheKey, DEFAULT_ICON)
-    }
-  }
-
-  return (
-    <img
-      src={src}
-      className="w-4 h-4 rounded"
-      alt="tab"
-      onError={e => { e.currentTarget.onerror = null; handleError() }}
-    />
-  )
-}
 
 const Popup = () => {
   const [open, setOpen] = useState(false)
@@ -116,7 +67,7 @@ const Popup = () => {
     if (itemRefs.current[activeIndex]) {
       itemRefs.current[activeIndex]?.scrollIntoView({
         block: 'nearest',
-        behavior: 'smooth'
+        behavior: 'instant'
       })
     }
   }, [activeIndex])
@@ -221,29 +172,32 @@ const Popup = () => {
       onClick={handleClose}
     >
       <div
-        className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[480px] p-4 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
+        className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[700px] p-2 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* 搜索框：无边框、无focus样式 */}
-        <div className="flex">
-          <input
-            ref={inputRef}
-            className="w-full h-12 rounded-xl px-4 text-lg outline-none border-none focus:ring-0 shadow-none bg-gray-100 placeholder-gray-400"
-            style={{ boxShadow: 'none', border: 'none' }}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索标签页、历史、书签..."
-            autoFocus
-          />
-        </div>
+        <input
+          ref={inputRef}
+          className="w-full h-12 rounded-xl text-lg outline-none border-none focus:ring-0 shadow-none placeholder-gray-400 px-3"
+          style={{ boxShadow: 'none', border: 'none' }}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(e.key)) {
+              e.preventDefault()
+            }
+          }}
+          placeholder="搜索标签页、历史、书签..."
+          autoFocus
+        />
         {/* 结果列表：高度固定、滚动、重阴影 */}
-        <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl bg-white" style={{ maxHeight: 320, minHeight: 120 }}>
+        <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl bg-white max-h-96 min-h-12">
           {list?.map((item, index) => (
             <div
               key={item.id}
               ref={el => itemRefs.current[index] = el}
               className={clsx(
-                "flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer transition-colors",
+                "flex items-center justify-between gap-2 px-3 py-2 rounded-xl cursor-pointer",
                 index === activeIndex ? "bg-gray-200" : "hover:bg-gray-100"
               )}
               onClick={() => handleOpenResult(item)}
