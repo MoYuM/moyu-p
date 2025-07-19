@@ -3,17 +3,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "~*": [
-        "./src/*"
-      ]
-    }
+      "~*": ["./src/*"]
+    },
+    "verbatimModuleSyntax": false
   },
-  "include": [
-    ".plasmo/index.d.ts",
-    "./**/*.ts",
-    "./**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": [".plasmo/index.d.ts", "./**/*.ts", "./**/*.tsx"],
+  "exclude": ["node_modules"]
 }

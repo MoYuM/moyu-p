@@ -1,11 +1,13 @@
 import { sendToBackground } from '@plasmohq/messaging'
 import { useMessage } from '@plasmohq/messaging/hook'
-import { useKeyPress } from 'ahooks'
 import clsx from 'clsx'
 import cssText from 'data-text:~style.css'
 import debouncePromise from 'debounce-promise'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useHotkeys } from 'react-hotkeys-hook'
+
 import { MESSAGE_ENUM } from '../const'
+import { Key } from '../key'
 
 import FaviconImg from './components/faviconImg'
 import SearchInput from './components/searchInput'
@@ -28,6 +30,8 @@ export function getStyle() {
   style.textContent = cssText
   return style
 }
+
+const { ArrowUp, ArrowDown, Enter, Escape, Shift } = Key
 
 const { OPEN_POPUP } = MESSAGE_ENUM
 
@@ -72,45 +76,23 @@ function Popup() {
     }
   }, [activeIndex])
 
-  useKeyPress(['uparrow', 'downarrow', 'esc', 'enter'], (_, key) => {
-    if (key === 'uparrow') {
-      setIsKeyboardNav(true)
-      handlePrev()
-    }
-    if (key === 'downarrow') {
-      setIsKeyboardNav(true)
-      handleNext()
-    }
-    if (key === 'enter') {
-      handleOpenResult(list[activeIndex])
-    }
-    if (key === 'esc') {
-      handleClose()
-    }
-  })
+  // -------- handler --------
 
-  useKeyPress(['ctrl', 'ctrl.p'], (e) => {
-    if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && !open) {
-      handleOpen()
-    }
-    if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && open) {
-      isMoved.current = true
-      handleNext()
-    }
-    if (e.type === 'keyup' && e.key === 'Control' && open) {
-      if (isMoved.current) {
-        handleOpenResult(list[activeIndex])
-      }
-    }
-  }, {
-    events: ['keydown', 'keyup'],
-  })
+  const handleDirectSearch = () => {
+    sendToBackground({
+      name: 'new-tab',
+      body: { url: `https://www.google.com/search?q=${searchQuery}` },
+    })
+    handleClose()
+  }
 
   const handlePrev = () => {
+    setIsKeyboardNav(true)
     setActiveIndex(prev => (prev - 1 + list.length) % list.length)
   }
 
   const handleNext = () => {
+    setIsKeyboardNav(true)
     setActiveIndex(prev => (prev + 1) % list.length)
   }
 
@@ -136,19 +118,71 @@ function Popup() {
     setList(results)
   }
 
-  const handleOpenResult = (item: SearchResult) => {
+  const handleOpenResult = (item?: SearchResult) => {
+    const res = item || list[activeIndex]
     sendToBackground({
       name: 'open-result',
-      body: {
-        type: item.type,
-        id: item.id,
-        url: item.url,
-      },
+      body: res,
     })
     handleClose()
   }
 
-  const debouncedSearch = useCallback(debouncePromise(handleSearch, 100), [])
+  // -------- 快捷键 --------
+
+  useHotkeys(Escape, handleClose, {
+    enabled: open,
+    preventDefault: true,
+    enableOnFormTags: true,
+    description: '关闭搜索框',
+  })
+
+  useHotkeys(ArrowDown, handleNext, {
+    enabled: open,
+    preventDefault: true,
+    enableOnFormTags: true,
+    description: '选择下一个结果',
+  })
+
+  useHotkeys(ArrowUp, handlePrev, {
+    enabled: open,
+    preventDefault: true,
+    enableOnFormTags: true,
+    description: '选择上一个结果',
+  })
+
+  useHotkeys(Enter, () => handleOpenResult(), {
+    enabled: open,
+    preventDefault: true,
+    enableOnFormTags: true,
+    description: '打开选中结果',
+  })
+
+  useHotkeys(`${Shift}+${Enter}`, handleDirectSearch, {
+    enabled: open,
+    preventDefault: true,
+    enableOnFormTags: true,
+    description: '直接使用搜索引擎搜索关键词',
+  })
+
+  // Ctrl+P 快捷键处理
+  useHotkeys('ctrl+p', () => {
+    if (!open) {
+      handleOpen()
+    }
+    else {
+      isMoved.current = true
+      handleNext()
+    }
+  }, { enableOnFormTags: true })
+
+  // Ctrl+P 释放时处理
+  useHotkeys('ctrl+p', () => {
+    if (isMoved.current) {
+      handleOpenResult(list[activeIndex])
+    }
+  }, { keyup: true, enabled: open, enableOnFormTags: true })
+
+  const debouncedSearch = useCallback(debouncePromise(handleSearch, 200), [])
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
@@ -174,6 +208,7 @@ function Popup() {
       <div
         className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[700px] p-2 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
         onClick={e => e.stopPropagation()}
+        // onBlur={handleClose}
       >
         {/* 搜索框：无边框、无focus样式 */}
         <SearchInput
