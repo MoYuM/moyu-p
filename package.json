@@ -2,12 +2,15 @@
   "name": "moyu-search",
   "displayName": "Moyu search",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.10.0",
   "description": "A basic Plasmo extension.",
   "author": "moyum",
   "scripts": {
     "dev": "plasmo dev",
     "build": "plasmo build",
-    "package": "plasmo package"
+    "package": "plasmo package",
+    "lint": "npx eslint",
+    "lint:fix": "npx eslint --fix"
   },
   "dependencies": {
     "@plasmohq/messaging": "^0.7.1",
@@ -22,16 +25,17 @@
     "tailwindcss": "3.4.1"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^4.17.0",
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
     "@types/chrome": "0.0.258",
     "@types/node": "20.11.5",
     "@types/react": "18.2.48",
     "@types/react-dom": "18.2.18",
+    "eslint": "^9.31.0",
     "postcss": "8.4.33",
     "prettier": "3.2.4",
     "typescript": "5.3.3"
   },
-  "packageManager": "pnpm@10.10.0",
   "manifest": {
     "host_permissions": [
       "https://*/*"

@@ -1,4 +1,4 @@
-import { forwardRef } from "react"
+import { forwardRef } from 'react'
 
 interface SearchInputProps {
   value: string
@@ -8,10 +8,10 @@ interface SearchInputProps {
 }
 
 // 部分网站的特殊快捷键过滤掉
-const spKeys = ['s'];
+const spKeys = ['s']
 
 // 功能按键过滤掉
-const fnKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+const fnKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) => {
   const { value, onChange } = props
@@ -46,6 +46,6 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
   )
 })
 
-SearchInput.displayName = "SearchInput"
+SearchInput.displayName = 'SearchInput'
 
-export default SearchInput 
+export default SearchInput

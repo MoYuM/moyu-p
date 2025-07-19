@@ -1,12 +1,12 @@
-import type { PlasmoMessaging } from "@plasmohq/messaging"
+import type { PlasmoMessaging } from '@plasmohq/messaging'
 
-export type RequestBody = {
+export interface RequestBody {
   type: 'tab' | 'history' | 'bookmark'
   id: string
   url: string
 }
 
-export type ResponseBody = {
+export interface ResponseBody {
   success: boolean
 }
 
@@ -20,24 +20,25 @@ const handler: PlasmoMessaging.MessageHandler<
     switch (type) {
       case 'tab':
         // 切换到指定标签页
-        await chrome.tabs.update(parseInt(id), { active: true })
+        await chrome.tabs.update(Number.parseInt(id), { active: true })
         break
-      
+
       case 'history':
       case 'bookmark':
         // 在新标签页中打开历史记录或书签
         await chrome.tabs.create({ url })
         break
-      
+
       default:
         throw new Error(`Unknown result type: ${type}`)
     }
 
     res.send({ success: true })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error opening result:', error)
     res.send({ success: false })
   }
 }
 
-export default handler 
+export default handler

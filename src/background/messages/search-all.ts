@@ -1,13 +1,13 @@
-import type { PlasmoMessaging } from "@plasmohq/messaging"
-import Fuse from "fuse.js"
-import pinyin from "pinyin"
+import type { PlasmoMessaging } from '@plasmohq/messaging'
+import Fuse from 'fuse.js'
+import pinyin from 'pinyin'
 
-export type RequestBody = {
+export interface RequestBody {
   keyword: string
   maxResults?: number
 }
 
-export type SearchResult = {
+export interface SearchResult {
   type: 'tab' | 'history' | 'bookmark'
   id: string
   title: string
@@ -18,12 +18,12 @@ export type SearchResult = {
   favicon?: string
 }
 
-export type ResponseBody = {
+export interface ResponseBody {
   results: SearchResult[]
 }
 
 // 按最近访问时间排序搜索结果
-const sortResultsByTime = (results: SearchResult[]) => {
+function sortResultsByTime(results: SearchResult[]) {
   return results.sort((a, b) => {
     const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
     const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
@@ -32,32 +32,32 @@ const sortResultsByTime = (results: SearchResult[]) => {
 }
 
 // 为搜索项添加拼音支持
-const addPinyinSupport = (items: any[], titleKey: string = 'title') => {
-  return items.map(item => {
-    const title = item[titleKey] || ""
+function addPinyinSupport(items: any[], titleKey: string = 'title') {
+  return items.map((item) => {
+    const title = item[titleKey] || ''
 
     // 生成标题的拼音
     const titlePinyin = pinyin(title, {
       style: pinyin.STYLE_NORMAL,
-      heteronym: false
-    }).flat().join("")
+      heteronym: false,
+    }).flat().join('')
 
     // 生成标题的拼音首字母
     const titlePinyinInitials = pinyin(title, {
       style: pinyin.STYLE_FIRST_LETTER,
-      heteronym: false
-    }).flat().join("")
+      heteronym: false,
+    }).flat().join('')
 
     return {
       ...item,
       titlePinyin,
-      titlePinyinInitials
+      titlePinyinInitials,
     }
   })
 }
 
 // 获取所有书签（递归）
-const getAllBookmarks = async () => {
+async function getAllBookmarks() {
   const tree = await chrome.bookmarks.getTree()
   const bookmarks: chrome.bookmarks.BookmarkTreeNode[] = []
   const traverse = (nodes: chrome.bookmarks.BookmarkTreeNode[]) => {
@@ -75,8 +75,9 @@ const getAllBookmarks = async () => {
 }
 
 // 新增：fetch 并转 base64 dataUrl
-const fetchFaviconDataUrl = async (url: string): Promise<string | undefined> => {
-  if (!url) return undefined
+async function fetchFaviconDataUrl(url: string): Promise<string | undefined> {
+  if (!url)
+    return undefined
   try {
     const response = await fetch(url)
     const blob = await response.blob()
@@ -85,7 +86,8 @@ const fetchFaviconDataUrl = async (url: string): Promise<string | undefined> => 
       reader.onloadend = () => resolve(reader.result as string)
       reader.readAsDataURL(blob)
     })
-  } catch {
+  }
+  catch {
     return undefined
   }
 }
@@ -110,21 +112,21 @@ const handler: PlasmoMessaging.MessageHandler<
       title: tab.title || '',
       url: tab.url || '',
       lastAccessed: (tab as any).lastAccessed,
-      favicon: tab.favIconUrl
+      favicon: tab.favIconUrl,
     }))
 
   // 获取历史记录
   const history = await chrome.history.search({
     text: '',
     maxResults: 1000,
-    startTime: 0
+    startTime: 0,
   })
   const historyResults: SearchResult[] = history.map(item => ({
     type: 'history',
     id: item.id || '',
     title: item.title || '',
     url: item.url || '',
-    lastVisitTime: item.lastVisitTime
+    lastVisitTime: item.lastVisitTime,
   }))
 
   // 获取书签
@@ -136,14 +138,14 @@ const handler: PlasmoMessaging.MessageHandler<
       id: bookmark.id,
       title: bookmark.title || '',
       url: bookmark.url || '',
-      dateAdded: bookmark.dateAdded
+      dateAdded: bookmark.dateAdded,
     }))
 
   // ====== 无关键词逻辑 ======
   if (!keyword) {
     // 1. 只返回最近使用的 tab（不包括当前 tab），按最近访问时间排序，默认 6 个
-    let sortedTabs = sortResultsByTime(tabResults)
-    let results = sortedTabs.slice(0, 6)
+    const sortedTabs = sortResultsByTime(tabResults)
+    const results = sortedTabs.slice(0, 6)
     // 2. 不足 6 个时，用历史补足
     if (results.length < 6) {
       // 排除tab中已出现的url
@@ -154,7 +156,8 @@ const handler: PlasmoMessaging.MessageHandler<
           results.push(h)
           tabUrls.add(h.url)
         }
-        if (results.length >= 6) break
+        if (results.length >= 6)
+          break
       }
     }
     // 3. 只返回6个
@@ -164,18 +167,18 @@ const handler: PlasmoMessaging.MessageHandler<
 
   // ====== 有关键词逻辑 ======
   // 合并所有结果用于搜索
-  let allResults = [...tabResults, ...historyResults, ...bookmarkResults]
+  const allResults = [...tabResults, ...historyResults, ...bookmarkResults]
   // 拼音支持
   const resultsWithPinyin = addPinyinSupport(allResults)
   const fuse = new Fuse(resultsWithPinyin, {
     includeScore: true,
     threshold: 0.3,
     keys: [
-      "title",
-      "url",
-      "titlePinyin",
-      "titlePinyinInitials"
-    ]
+      'title',
+      'url',
+      'titlePinyin',
+      'titlePinyinInitials',
+    ],
   })
   const searchResults = fuse.search(keyword)
   // 过滤重复（同title，优先tab>history>bookmark）
@@ -201,11 +204,11 @@ const handler: PlasmoMessaging.MessageHandler<
         return { ...item, faviconDataUrl }
       }
       return item
-    })
+    }),
   )
   res.send({
-    results: resultsWithFavicon
+    results: resultsWithFavicon,
   })
 }
 
-export default handler 
+export default handler

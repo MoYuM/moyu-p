@@ -1,18 +1,17 @@
-import { useState, useCallback, useEffect, useRef } from "react"
-import { useMessage } from "@plasmohq/messaging/hook"
-import { sendToBackground } from "@plasmohq/messaging"
-import { MESSAGE_ENUM } from "../const"
-import { useKeyPress } from "ahooks"
-import debouncePromise from "debounce-promise"
-import cssText from "data-text:~style.css"
-import clsx from "clsx"
+import { sendToBackground } from '@plasmohq/messaging'
+import { useMessage } from '@plasmohq/messaging/hook'
+import { useKeyPress } from 'ahooks'
+import clsx from 'clsx'
+import cssText from 'data-text:~style.css'
+import debouncePromise from 'debounce-promise'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { MESSAGE_ENUM } from '../const'
 
-import FaviconImg from "./components/faviconImg"
-import SearchInput from "./components/searchInput"
-
+import FaviconImg from './components/faviconImg'
+import SearchInput from './components/searchInput'
 
 // 搜索结果类型
-type SearchResult = {
+interface SearchResult {
   type: 'tab' | 'history' | 'bookmark'
   id: string
   title: string
@@ -24,18 +23,18 @@ type SearchResult = {
   faviconDataUrl?: string
 }
 
-export const getStyle = () => {
-  const style = document.createElement("style")
+export function getStyle() {
+  const style = document.createElement('style')
   style.textContent = cssText
   return style
 }
 
 const { OPEN_POPUP } = MESSAGE_ENUM
 
-const Popup = () => {
+function Popup() {
   const [open, setOpen] = useState(false)
   const [list, setList] = useState<SearchResult[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   // 新增：区分键盘/鼠标导航
   const [isKeyboardNav, setIsKeyboardNav] = useState(true)
@@ -68,43 +67,43 @@ const Popup = () => {
     if (itemRefs.current[activeIndex]) {
       itemRefs.current[activeIndex]?.scrollIntoView({
         block: 'nearest',
-        behavior: 'instant'
+        behavior: 'instant',
       })
     }
   }, [activeIndex])
 
-  useKeyPress(["uparrow", "downarrow", "esc", "enter"], (_, key) => {
-    if (key === "uparrow") {
+  useKeyPress(['uparrow', 'downarrow', 'esc', 'enter'], (_, key) => {
+    if (key === 'uparrow') {
       setIsKeyboardNav(true)
-      handlePrev();
+      handlePrev()
     }
-    if (key === "downarrow") {
+    if (key === 'downarrow') {
       setIsKeyboardNav(true)
-      handleNext();
+      handleNext()
     }
     if (key === 'enter') {
       handleOpenResult(list[activeIndex])
     }
     if (key === 'esc') {
-      handleClose();
+      handleClose()
     }
   })
 
-  useKeyPress(["ctrl", "ctrl.p"], (e) => {
+  useKeyPress(['ctrl', 'ctrl.p'], (e) => {
     if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && !open) {
-      handleOpen();
+      handleOpen()
     }
     if (e.type === 'keydown' && e.key === 'p' && e.ctrlKey && open) {
-      isMoved.current = true;
-      handleNext();
+      isMoved.current = true
+      handleNext()
     }
     if (e.type === 'keyup' && e.key === 'Control' && open) {
       if (isMoved.current) {
-        handleOpenResult(list[activeIndex]);
+        handleOpenResult(list[activeIndex])
       }
     }
   }, {
-    events: ['keydown', 'keyup']
+    events: ['keydown', 'keyup'],
   })
 
   const handlePrev = () => {
@@ -117,36 +116,36 @@ const Popup = () => {
 
   const handleOpen = async () => {
     setOpen(true)
-    await handleSearch();
-    inputRef.current?.focus();
+    await handleSearch()
+    inputRef.current?.focus()
   }
 
   const handleClose = () => {
     setOpen(false)
-    setSearchQuery("")
+    setSearchQuery('')
     setActiveIndex(0)
     setList([])
-    isMoved.current = false;
+    isMoved.current = false
   }
 
   const handleSearch = async (keyword?: string) => {
     const { results } = await sendToBackground({
-      name: "search-all",
-      body: { keyword }
+      name: 'search-all',
+      body: { keyword },
     })
     setList(results)
   }
 
   const handleOpenResult = (item: SearchResult) => {
     sendToBackground({
-      name: "open-result",
+      name: 'open-result',
       body: {
         type: item.type,
         id: item.id,
-        url: item.url
-      }
+        url: item.url,
+      },
     })
-    handleClose();
+    handleClose()
   }
 
   const debouncedSearch = useCallback(debouncePromise(handleSearch, 100), [])
@@ -169,12 +168,12 @@ const Popup = () => {
   return (
     <div
       className="fixed left-0 top-0 w-screen h-screen z-[9999]"
-      style={{ display: open ? "block" : "none" }}
+      style={{ display: open ? 'block' : 'none' }}
       onClick={handleClose}
     >
       <div
         className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[700px] p-2 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {/* 搜索框：无边框、无focus样式 */}
         <SearchInput
@@ -189,13 +188,14 @@ const Popup = () => {
               key={item.id}
               ref={el => itemRefs.current[index] = el}
               className={clsx(
-                "flex items-center justify-between gap-2 px-3 py-2 rounded-xl cursor-pointer",
-                index === activeIndex ? "bg-gray-200" : "hover:bg-gray-100"
+                'flex items-center justify-between gap-2 px-3 py-2 rounded-xl cursor-pointer',
+                index === activeIndex ? 'bg-gray-200' : 'hover:bg-gray-100',
               )}
               onClick={() => handleOpenResult(item)}
               onMouseOver={() => {
                 // 只有鼠标导航时才允许 setActiveIndex
-                if (!isKeyboardNav) setActiveIndex(index)
+                if (!isKeyboardNav)
+                  setActiveIndex(index)
               }}
               onMouseDown={() => setIsKeyboardNav(false)}
             >
