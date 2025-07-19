@@ -1,5 +1,5 @@
 import { useState } from "react"
-import DEFAULT_ICON from "data-base64:~assets/icon.png"
+import DEFAULT_ICON from "data-text:/assets/icon.png"
 import { sendToBackground } from "@plasmohq/messaging"
 
 const FaviconImg = ({ url }: { url?: string }) => {

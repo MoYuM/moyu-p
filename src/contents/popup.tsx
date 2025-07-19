@@ -8,6 +8,7 @@ import cssText from "data-text:~style.css"
 import clsx from "clsx"
 
 import FaviconImg from "./components/faviconImg"
+import SearchInput from "./components/searchInput"
 
 
 // 搜索结果类型
@@ -148,7 +149,7 @@ const Popup = () => {
     handleClose();
   }
 
-  const debouncedSearch = useCallback(debouncePromise(handleSearch, 200), [])
+  const debouncedSearch = useCallback(debouncePromise(handleSearch, 100), [])
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
@@ -176,19 +177,10 @@ const Popup = () => {
         onClick={(e) => e.stopPropagation()}
       >
         {/* 搜索框：无边框、无focus样式 */}
-        <input
+        <SearchInput
           ref={inputRef}
-          className="w-full h-12 rounded-xl text-lg outline-none border-none focus:ring-0 shadow-none placeholder-gray-400 px-3"
-          style={{ boxShadow: 'none', border: 'none' }}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (['ArrowUp', 'ArrowDown', 'Enter', 'Escape'].includes(e.key)) {
-              e.preventDefault()
-            }
-          }}
-          placeholder="搜索标签页、历史、书签..."
-          autoFocus
+          onChange={setSearchQuery}
         />
         {/* 结果列表：高度固定、滚动、重阴影 */}
         <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl bg-white max-h-96 min-h-12">
@@ -214,7 +206,7 @@ const Popup = () => {
                 {getResultIcon(item)}
               </div>
               {/* 快捷键占位 */}
-              <div className="text-xs text-gray-400 w-12 text-right select-none">⌘1</div>
+              {/* <div className="text-xs text-gray-400 w-12 text-right select-none">⌘1</div> */}
             </div>
           ))}
         </div>

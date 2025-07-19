@@ -16,7 +16,7 @@
     "debounce-promise": "^3.1.2",
     "fuse.js": "^7.1.0",
     "pinyin": "^4.0.0",
-    "plasmo": "0.90.3",
+    "plasmo": "0.90.5",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "tailwindcss": "3.4.1"
