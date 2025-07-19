@@ -1,33 +1,53 @@
-This is a [Plasmo extension](https://docs.plasmo.com/) project bootstrapped with [`plasmo init`](https://www.npmjs.com/package/plasmo).
+# Moyu Search
 
-## Getting Started
+A basic Plasmo extension.
 
-First, run the development server:
+## 开发
 
 ```bash
 pnpm dev
-# or
-npm run dev
 ```
 
-Open your browser and load the appropriate development build. For example, if you are developing for the chrome browser, using manifest v3, use: `build/chrome-mv3-dev`.
-
-You can start editing the popup by modifying `popup.tsx`. It should auto-update as you make changes. To add an options page, simply add a `options.tsx` file to the root of the project, with a react component default exported. Likewise to add a content page, add a `content.ts` file to the root of the project, importing some module and do some logic, then reload the extension on your browser.
-
-For further guidance, [visit our Documentation](https://docs.plasmo.com/)
-
-## Making production build
-
-Run the following:
+## 构建
 
 ```bash
 pnpm build
-# or
-npm run build
 ```
 
-This should create a production bundle for your extension, ready to be zipped and published to the stores.
+## 打包
 
-## Submit to the webstores
+```bash
+pnpm package
+```
 
-The easiest way to deploy your Plasmo extension is to use the built-in [bpp](https://bpp.browser.market) GitHub action. Prior to using this action however, make sure to build your extension and upload the first version to the store to establish the basic credentials. Then, simply follow [this setup instruction](https://docs.plasmo.com/framework/workflows/submit) and you should be on your way for automated submission!
+## 代码质量
+
+### Lint-staged 配置
+
+项目已配置 lint-staged 和 husky，在每次提交前会自动运行以下检查：
+
+- **JavaScript/TypeScript 文件**: 运行 ESLint 修复和 Prettier 格式化
+- **其他文件 (JSON, CSS, MD)**: 运行 Prettier 格式化
+
+### 手动运行
+
+```bash
+# 运行 ESLint
+pnpm lint
+
+# 运行 ESLint 并自动修复
+pnpm lint:fix
+
+# 运行 lint-staged（处理暂存的文件）
+npx lint-staged
+```
+
+### Git Hooks
+
+- **pre-commit**: 自动运行 lint-staged，确保提交的代码符合规范
+
+如果遇到问题，可以跳过 hooks：
+
+```bash
+git commit --no-verify
+```
