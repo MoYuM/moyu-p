@@ -2,7 +2,7 @@ import React from 'react'
 import { Key } from '../../key'
 
 interface HotkeyIconProps {
-  keys: string | string[]
+  keys: string[]
   className?: string
   size?: 'sm' | 'md' | 'lg'
 }
@@ -132,9 +132,6 @@ const HotkeyIcon: React.FC<HotkeyIconProps> = ({
   className = '',
   size = 'md',
 }) => {
-  // 处理输入，支持字符串或数组
-  const keyArray = Array.isArray(keys) ? keys : keys.split('+')
-
   // 获取键的显示文本
   const getKeyDisplay = (key: string): string => {
     return keyIcons[key] || key.toUpperCase()
@@ -149,11 +146,10 @@ const HotkeyIcon: React.FC<HotkeyIconProps> = ({
         ${className}
       `}
     >
-      {keyArray.map((key, index) => (
+      {keys?.map((key, index) => (
         <span
           key={index}
           className="text-gray-400 dark:text-gray-500"
-          // className={isModifierKey(key) ? 'text-gray-600' : 'text-gray-800'}
         >
           {getKeyDisplay(key)}
         </span>
