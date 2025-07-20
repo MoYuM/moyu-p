@@ -8,3 +8,11 @@
   all: initial;
   box-sizing: border-box;
 }
+
+/* 暗黑模式过渡效果 */
+* {
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}

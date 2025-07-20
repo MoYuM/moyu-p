@@ -144,7 +144,7 @@ const HotkeyIcon: React.FC<HotkeyIconProps> = ({
     <kbd
       className={`
         inline-flex items-center gap-1
-        border border-gray-300 rounded font-sans 
+        border border-gray-300 dark:border-gray-600 rounded font-sans 
         ${sizeStyles[size]}
         ${className}
       `}
@@ -152,7 +152,7 @@ const HotkeyIcon: React.FC<HotkeyIconProps> = ({
       {keyArray.map((key, index) => (
         <span
           key={index}
-          className="text-gray-400"
+          className="text-gray-400 dark:text-gray-500"
           // className={isModifierKey(key) ? 'text-gray-600' : 'text-gray-800'}
         >
           {getKeyDisplay(key)}
