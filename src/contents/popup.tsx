@@ -5,12 +5,21 @@ import cssText from 'data-text:~style.css'
 import debouncePromise from 'debounce-promise'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
+import Bookmark from 'react:/assets/bookmark.svg'
+import Box from 'react:/assets/box.svg'
+import Clock from 'react:/assets/clock.svg'
 
 import { MESSAGE_ENUM } from '../const'
 import { Key } from '../key'
 
 import FaviconImg from './components/faviconImg'
 import SearchInput from './components/searchInput'
+
+const IconMap = {
+  tab: Box,
+  history: Clock,
+  bookmark: Bookmark,
+}
 
 // 搜索结果类型
 interface SearchResult {
@@ -186,16 +195,9 @@ function Popup() {
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
-    // 其余类型也显示 icon
-    switch (item.type) {
-      case 'tab':
-        return <div className="w-4 h-4 bg-blue-500 rounded-sm flex items-center justify-center text-white text-xs">T</div>
-      case 'history':
-        return <div className="w-4 h-4 bg-gray-500 rounded-sm flex items-center justify-center text-white text-xs">H</div>
-      case 'bookmark':
-        return <div className="w-4 h-4 bg-yellow-500 rounded-sm flex items-center justify-center text-white text-xs">B</div>
-      default:
-        return <div className="w-4 h-4 bg-gray-300 rounded-sm flex items-center justify-center text-white text-xs">?</div>
+    const Icon = IconMap[item.type]
+    if (Icon) {
+      return <Icon className="w-4 h-4 text-gray-400" />
     }
   }
 
@@ -208,15 +210,12 @@ function Popup() {
       <div
         className="absolute left-1/2 top-1/4 -translate-x-1/2 w-[700px] p-2 flex flex-col gap-2 bg-white rounded-2xl shadow-2xl"
         onClick={e => e.stopPropagation()}
-        // onBlur={handleClose}
       >
-        {/* 搜索框：无边框、无focus样式 */}
         <SearchInput
           ref={inputRef}
           value={searchQuery}
           onChange={setSearchQuery}
         />
-        {/* 结果列表：高度固定、滚动、重阴影 */}
         <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl bg-white max-h-96 min-h-12">
           {list?.map((item, index) => (
             <div
@@ -237,11 +236,10 @@ function Popup() {
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 <FaviconImg url={item.favicon} />
                 <div className="truncate flex-1 text-base font-medium">{item.title}</div>
-                {/* 类型图标 */}
+              </div>
+              <div className="flex items-center gap-1 text-xs text-gray-400 select-none">
                 {getResultIcon(item)}
               </div>
-              {/* 快捷键占位 */}
-              {/* <div className="text-xs text-gray-400 w-12 text-right select-none">⌘1</div> */}
             </div>
           ))}
         </div>
