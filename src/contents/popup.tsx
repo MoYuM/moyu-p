@@ -203,7 +203,7 @@ function Popup() {
 
   return (
     <div
-      className="fixed left-0 top-0 w-screen h-screen z-[9999] bg-black/20 dark:bg-black/40"
+      className="fixed left-0 top-0 w-screen h-screen z-[9999]"
       style={{ display: open ? 'block' : 'none' }}
       onClick={handleClose}
     >
