@@ -19,8 +19,29 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // 阻止所有键盘事件的冒泡
-    e.stopPropagation()
+    // 只阻止可能干扰输入的事件，允许快捷键正常工作
+    const key = e.key.toLowerCase()
+
+    // 只阻止这些可能干扰输入的事件
+    const inputInterferenceKeys = [
+      'backspace',
+      'delete',
+      'tab',
+      'home',
+      'end',
+      'pageup',
+      'pagedown',
+    ]
+
+    // 阻止文本编辑相关的组合键
+    const isTextEditCombo = (e.ctrlKey || e.metaKey)
+      && ['a', 'c', 'v', 'x', 'z', 'y'].includes(key)
+
+    // 如果是输入干扰按键或文本编辑组合键，阻止冒泡
+    if (inputInterferenceKeys.includes(key) || isTextEditCombo) {
+      e.stopPropagation()
+    }
+    // 其他按键（包括快捷键）允许冒泡
   }
 
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
