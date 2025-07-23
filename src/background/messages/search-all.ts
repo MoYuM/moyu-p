@@ -118,7 +118,7 @@ const handler: PlasmoMessaging.MessageHandler<
   // 获取历史记录
   const history = await chrome.history.search({
     text: '',
-    maxResults: 1000,
+    maxResults: maxResults > 50 ? 2000 : 1000, // 本地搜索时获取更多历史记录
     startTime: 0,
   })
   const historyResults: SearchResult[] = history.map(item => ({

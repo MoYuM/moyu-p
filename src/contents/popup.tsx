@@ -2,7 +2,7 @@ import { sendToBackground } from '@plasmohq/messaging'
 import { useMessage } from '@plasmohq/messaging/hook'
 import clsx from 'clsx'
 import cssText from 'data-text:~style.css'
-import debouncePromise from 'debounce-promise'
+import Fuse from 'fuse.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
@@ -32,6 +32,8 @@ interface SearchResult {
   dateAdded?: number
   favicon?: string
   faviconDataUrl?: string
+  titlePinyin?: string
+  titlePinyinInitials?: string
 }
 
 export function getStyle() {
@@ -51,11 +53,16 @@ function Popup() {
   const [activeIndex, setActiveIndex] = useState(0)
   // 新增：区分键盘/鼠标导航
   const [isKeyboardNav, setIsKeyboardNav] = useState(true)
+  // 新增：本地搜索相关状态
+  const [allData, setAllData] = useState<SearchResult[]>([])
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const isMoved = useRef(false)
   // 新增：每个结果项的ref
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+  // 新增：Fuse搜索实例（使用预生成索引）
+  const fuseRef = useRef<Fuse<SearchResult> | null>(null)
 
   useMessage(({ name }) => {
     if (!open && name === OPEN_POPUP) {
@@ -66,9 +73,53 @@ function Popup() {
     }
   })
 
+  // 新增：本地搜索函数
+  const performLocalSearch = useCallback((keyword: string) => {
+    if (!keyword) {
+      // 无关键词时返回最近使用的数据
+      const sortedData = [...allData].sort((a, b) => {
+        const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
+        const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
+        return bTime - aTime
+      })
+      setList(sortedData.slice(0, 6))
+      return
+    }
+
+    if (!fuseRef.current)
+      return
+
+    const searchResults = fuseRef.current.search(keyword)
+    const deduped: SearchResult[] = []
+    const seenTitle = new Set<string>()
+
+    for (const { item } of searchResults) {
+      const title = item.title || item.url
+      if (!seenTitle.has(title)) {
+        seenTitle.add(title)
+        deduped.push(item)
+      }
+    }
+
+    // 排序：tab/history按时间，书签永远排最后
+    const tabAndHistory = deduped.filter(i => i.type !== 'bookmark')
+    const bookmarksOnly = deduped.filter(i => i.type === 'bookmark')
+    const sortedTabAndHistory = tabAndHistory.sort((a, b) => {
+      const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
+      const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
+      return bTime - aTime
+    })
+    const sortedResults = [...sortedTabAndHistory, ...bookmarksOnly]
+
+    setList(sortedResults.slice(0, 50))
+  }, [allData])
+
+  // 新增：搜索内容变化时立即执行本地搜索
   useEffect(() => {
-    debouncedSearch(searchQuery)
-  }, [searchQuery])
+    if (isDataLoaded) {
+      performLocalSearch(searchQuery)
+    }
+  }, [searchQuery, isDataLoaded, performLocalSearch])
 
   // 新增：搜索内容变化时，activeIndex 归零
   useEffect(() => {
@@ -107,7 +158,7 @@ function Popup() {
 
   const handleOpen = async () => {
     setOpen(true)
-    await handleSearch()
+    await loadAllData()
     inputRef.current?.focus()
   }
 
@@ -119,12 +170,44 @@ function Popup() {
     isMoved.current = false
   }
 
-  const handleSearch = async (keyword?: string) => {
-    const { results } = await sendToBackground({
-      name: 'search-all',
-      body: { keyword },
+  // 新增：加载所有数据并初始化搜索
+  const loadAllData = async () => {
+    if (isDataLoaded)
+      return
+
+    const { results, fuseIndex } = await sendToBackground({
+      name: 'get-all',
+      body: { forceRefresh: false },
     })
-    setList(results)
+
+    // 数据已经包含拼音信息，无需再次处理
+    setAllData(results)
+
+    // 使用预生成的索引初始化Fuse搜索实例
+    const fuseOptions = {
+      includeScore: true,
+      threshold: 0.3,
+      keys: [
+        'title',
+        'url',
+        'titlePinyin',
+        'titlePinyinInitials',
+      ],
+    }
+
+    if (fuseIndex) {
+      // 使用预生成的索引
+      const parsedIndex = Fuse.parseIndex(fuseIndex)
+      fuseRef.current = new Fuse<SearchResult>(results, fuseOptions, parsedIndex)
+    }
+    else {
+      // 降级到自动索引（如果background没有提供索引）
+      fuseRef.current = new Fuse<SearchResult>(results, fuseOptions)
+    }
+
+    setIsDataLoaded(true)
+    // 初始显示最近使用的数据
+    performLocalSearch('')
   }
 
   const handleOpenResult = (item?: SearchResult) => {
@@ -190,8 +273,6 @@ function Popup() {
       handleOpenResult(list[activeIndex])
     }
   }, { keyup: true, enabled: open, enableOnFormTags: true })
-
-  const debouncedSearch = useCallback(debouncePromise(handleSearch, 200), [])
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
