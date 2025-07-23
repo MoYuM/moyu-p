@@ -13,7 +13,34 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
   const { value, onChange } = props
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // 允许通过 onChange 更新值，但阻止事件冒泡
     onChange(e.target.value)
+    e.stopPropagation()
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // 阻止所有键盘事件的冒泡
+    e.stopPropagation()
+  }
+
+  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleCompositionStart = (e: React.CompositionEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleCompositionEnd = (e: React.CompositionEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleCompositionUpdate = (e: React.CompositionEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   return (
@@ -25,6 +52,11 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
         style={{ boxShadow: 'none', border: 'none' }}
         value={value}
         onChange={handleChange}
+        onInput={handleInput}
+        onCompositionStart={handleCompositionStart}
+        onCompositionEnd={handleCompositionEnd}
+        onCompositionUpdate={handleCompositionUpdate}
+        onKeyDown={handleKeyDown}
         placeholder="搜索标签页、历史、书签..."
         autoFocus
       />
