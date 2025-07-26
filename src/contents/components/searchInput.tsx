@@ -79,7 +79,6 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
         onCompositionUpdate={handleCompositionUpdate}
         onKeyDown={handleKeyDown}
         placeholder="搜索标签页、历史、书签..."
-        autoFocus
       />
       <div className="flex items-center text-gray-400 dark:text-gray-500 gap-2">
         <span>Google</span>

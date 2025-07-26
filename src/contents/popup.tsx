@@ -1,5 +1,5 @@
+import type { SearchResult } from '../type'
 import { sendToBackground } from '@plasmohq/messaging'
-import { useMessage } from '@plasmohq/messaging/hook'
 import clsx from 'clsx'
 import cssText from 'data-text:~style.css'
 import Fuse from 'fuse.js'
@@ -8,8 +8,6 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
 import Clock from 'react:/assets/clock.svg'
-
-import { MESSAGE_ENUM } from '../const'
 import { Key } from '../key'
 
 import FaviconImg from './components/faviconImg'
@@ -21,19 +19,15 @@ const IconMap = {
   bookmark: Bookmark,
 }
 
-// 搜索结果类型
-interface SearchResult {
-  type: 'tab' | 'history' | 'bookmark'
-  id: string
-  title: string
-  url: string
-  lastAccessed?: number
-  lastVisitTime?: number
-  dateAdded?: number
-  favicon?: string
-  faviconDataUrl?: string
-  titlePinyin?: string
-  titlePinyinInitials?: string
+const fuseOptions = {
+  includeScore: true,
+  threshold: 0.3,
+  keys: [
+    'title',
+    'url',
+    'titlePinyin',
+    'titlePinyinInitials',
+  ],
 }
 
 export function getStyle() {
@@ -44,8 +38,6 @@ export function getStyle() {
 
 const { ArrowUp, ArrowDown, Enter, Escape, Shift } = Key
 
-const { OPEN_POPUP } = MESSAGE_ENUM
-
 function Popup() {
   const [open, setOpen] = useState(false)
   const [list, setList] = useState<SearchResult[]>([])
@@ -54,8 +46,8 @@ function Popup() {
   // 新增：区分键盘/鼠标导航
   const [isKeyboardNav, setIsKeyboardNav] = useState(true)
   // 新增：本地搜索相关状态
-  const [allData, setAllData] = useState<SearchResult[]>([])
-  const [isDataLoaded, setIsDataLoaded] = useState(false)
+  // const [allData, setAllData] = useState<SearchResult[]>([])
+  // const [isDataLoaded, setIsDataLoaded] = useState(false)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const isMoved = useRef(false)
@@ -64,34 +56,10 @@ function Popup() {
   // 新增：Fuse搜索实例（使用预生成索引）
   const fuseRef = useRef<Fuse<SearchResult> | null>(null)
 
-  useMessage(({ name }) => {
-    if (!open && name === OPEN_POPUP) {
-      handleOpen()
-    }
-    if (open && name === OPEN_POPUP) {
-      setActiveIndex(prev => (prev + 1) % list.length)
-    }
-  })
-
-  const getRecentTab = () => {
-    return [...allData]
-      .filter(i => i.type === 'tab')
-      .sort((a, b) => {
-        const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
-        const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
-        return bTime - aTime
-      })
-      .slice(0, 6)
-  }
-
   // 新增：本地搜索函数
   const performLocalSearch = (keyword: string) => {
-    if (!keyword) {
-      const list = getRecentTab()
-      setList(list)
+    if (!keyword)
       return
-    }
-
     if (!fuseRef.current)
       return
 
@@ -120,19 +88,18 @@ function Popup() {
     setList(sortedResults.slice(0, 50))
   }
 
-  // 新增：搜索内容变化时立即执行本地搜索
   useEffect(() => {
-    if (isDataLoaded) {
-      performLocalSearch(searchQuery)
+    if (open) {
+      inputRef.current?.focus()
     }
-  }, [searchQuery, isDataLoaded, performLocalSearch])
+  }, [open])
 
-  // 新增：搜索内容变化时，activeIndex 归零
+  // 搜索内容变化时，activeIndex 归零
   useEffect(() => {
     setActiveIndex(0)
   }, [searchQuery])
 
-  // 新增：activeIndex 变化时自动滚动到可见
+  // activeIndex 变化时自动滚动到可见
   useEffect(() => {
     if (itemRefs.current[activeIndex]) {
       itemRefs.current[activeIndex]?.scrollIntoView({
@@ -162,10 +129,15 @@ function Popup() {
     setActiveIndex(prev => (prev + 1) % list.length)
   }
 
+  const getRecentTabs = async () => {
+    const { results } = await sendToBackground({ name: 'get-recent-tabs' })
+    setList(results)
+  }
+
   const handleOpen = async () => {
     setOpen(true)
-    await loadAllData()
-    inputRef.current?.focus()
+    getRecentTabs()
+    loadAllData()
   }
 
   const handleClose = () => {
@@ -178,44 +150,31 @@ function Popup() {
 
   // 新增：加载所有数据并初始化搜索
   const loadAllData = async () => {
-    // if (isDataLoaded) {
-    //   performLocalSearch('')
-    //   return
-    // }
-
     const { results, fuseIndex } = await sendToBackground({
       name: 'get-all',
       body: { forceRefresh: false },
     })
 
     // 数据已经包含拼音信息，无需再次处理
-    setAllData(results)
-
-    // 使用预生成的索引初始化Fuse搜索实例
-    const fuseOptions = {
-      includeScore: true,
-      threshold: 0.3,
-      keys: [
-        'title',
-        'url',
-        'titlePinyin',
-        'titlePinyinInitials',
-      ],
-    }
+    // setAllData(results)
 
     if (fuseIndex) {
-      // 使用预生成的索引
       const parsedIndex = Fuse.parseIndex(fuseIndex)
       fuseRef.current = new Fuse<SearchResult>(results, fuseOptions, parsedIndex)
     }
     else {
-      // 降级到自动索引（如果background没有提供索引）
       fuseRef.current = new Fuse<SearchResult>(results, fuseOptions)
     }
+  }
 
-    setIsDataLoaded(true)
-    // 初始显示最近使用的数据
-    performLocalSearch('')
+  const handleSearchQueryChange = (value: string) => {
+    setSearchQuery(value)
+    if (value) {
+      performLocalSearch(value)
+    }
+    else {
+      getRecentTabs()
+    }
   }
 
   const handleOpenResult = (item?: SearchResult) => {
@@ -273,7 +232,10 @@ function Popup() {
       isMoved.current = true
       handleNext()
     }
-  }, { enableOnFormTags: true })
+  }, {
+    enableOnFormTags: true,
+    enabled: !open,
+  }, [open])
 
   // Ctrl+P 释放时处理
   useHotkeys('ctrl+p', () => {
@@ -306,7 +268,7 @@ function Popup() {
         <SearchInput
           ref={inputRef}
           value={searchQuery}
-          onChange={setSearchQuery}
+          onChange={handleSearchQueryChange}
         />
         <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl max-h-96 min-h-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {list?.map((item, index) => (
