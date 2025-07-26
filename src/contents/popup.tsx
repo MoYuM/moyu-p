@@ -3,7 +3,7 @@ import { useMessage } from '@plasmohq/messaging/hook'
 import clsx from 'clsx'
 import cssText from 'data-text:~style.css'
 import Fuse from 'fuse.js'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
@@ -73,16 +73,22 @@ function Popup() {
     }
   })
 
-  // 新增：本地搜索函数
-  const performLocalSearch = useCallback((keyword: string) => {
-    if (!keyword) {
-      // 无关键词时返回最近使用的数据
-      const sortedData = [...allData].sort((a, b) => {
+  const getRecentTab = () => {
+    return [...allData]
+      .filter(i => i.type === 'tab')
+      .sort((a, b) => {
         const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
         const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
         return bTime - aTime
       })
-      setList(sortedData.slice(0, 6))
+      .slice(0, 6)
+  }
+
+  // 新增：本地搜索函数
+  const performLocalSearch = (keyword: string) => {
+    if (!keyword) {
+      const list = getRecentTab()
+      setList(list)
       return
     }
 
@@ -112,14 +118,14 @@ function Popup() {
     const sortedResults = [...sortedTabAndHistory, ...bookmarksOnly]
 
     setList(sortedResults.slice(0, 50))
-  }, [allData])
+  }
 
   // 新增：搜索内容变化时立即执行本地搜索
   useEffect(() => {
-    if (isDataLoaded && open) {
+    if (isDataLoaded) {
       performLocalSearch(searchQuery)
     }
-  }, [searchQuery, isDataLoaded, open, performLocalSearch])
+  }, [searchQuery, isDataLoaded, performLocalSearch])
 
   // 新增：搜索内容变化时，activeIndex 归零
   useEffect(() => {
@@ -172,8 +178,10 @@ function Popup() {
 
   // 新增：加载所有数据并初始化搜索
   const loadAllData = async () => {
-    if (isDataLoaded)
-      return
+    // if (isDataLoaded) {
+    //   performLocalSearch('')
+    //   return
+    // }
 
     const { results, fuseIndex } = await sendToBackground({
       name: 'get-all',
