@@ -1,3 +1,4 @@
+import type { IFuseOptions } from 'fuse.js'
 import type { SearchResult } from '../type'
 import { sendToBackground } from '@plasmohq/messaging'
 import clsx from 'clsx'
@@ -19,8 +20,9 @@ const IconMap = {
   bookmark: Bookmark,
 }
 
-const fuseOptions = {
+const fuseOptions: IFuseOptions<SearchResult> = {
   includeScore: true,
+  useExtendedSearch: true,
   threshold: 0.3,
   keys: [
     'title',
@@ -57,35 +59,42 @@ function Popup() {
   const fuseRef = useRef<Fuse<SearchResult> | null>(null)
 
   // 新增：本地搜索函数
-  const performLocalSearch = (keyword: string) => {
+  const handleSearch = (keyword: string) => {
     if (!keyword)
       return
     if (!fuseRef.current)
       return
 
     const searchResults = fuseRef.current.search(keyword)
-    const deduped: SearchResult[] = []
     const seenTitle = new Set<string>()
+    // const deduped: SearchResult[] = []
+    const tabs: SearchResult[] = []
+    const others: SearchResult[] = []
 
     for (const { item } of searchResults) {
       const title = item.title || item.url
       if (!seenTitle.has(title)) {
         seenTitle.add(title)
-        deduped.push(item)
+        if (item.type === 'tab') {
+          tabs.push(item)
+        }
+        else {
+          others.push(item)
+        }
       }
     }
 
     // 排序：tab/history按时间，书签永远排最后
-    const tabAndHistory = deduped.filter(i => i.type !== 'bookmark')
-    const bookmarksOnly = deduped.filter(i => i.type === 'bookmark')
-    const sortedTabAndHistory = tabAndHistory.sort((a, b) => {
-      const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
-      const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
-      return bTime - aTime
-    })
-    const sortedResults = [...sortedTabAndHistory, ...bookmarksOnly]
-
-    setList(sortedResults.slice(0, 50))
+    // const tabAndHistory = deduped.filter(i => i.type !== 'bookmark')
+    // const bookmarksOnly = deduped.filter(i => i.type === 'bookmark')
+    // const sortedTabAndHistory = tabAndHistory.sort((a, b) => {
+    //   const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
+    //   const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
+    //   return bTime - aTime
+    // })
+    // const sortedResults = [...sortedTabAndHistory, ...bookmarksOnly]
+    setList([...tabs, ...others])
+    // setList(sortedResults.slice(0, 50))
   }
 
   useEffect(() => {
@@ -170,7 +179,7 @@ function Popup() {
   const handleSearchQueryChange = (value: string) => {
     setSearchQuery(value)
     if (value) {
-      performLocalSearch(value)
+      handleSearch(value)
     }
     else {
       getRecentTabs()
