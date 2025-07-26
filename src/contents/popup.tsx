@@ -116,10 +116,10 @@ function Popup() {
 
   // 新增：搜索内容变化时立即执行本地搜索
   useEffect(() => {
-    if (isDataLoaded) {
+    if (isDataLoaded && open) {
       performLocalSearch(searchQuery)
     }
-  }, [searchQuery, isDataLoaded, performLocalSearch])
+  }, [searchQuery, isDataLoaded, open, performLocalSearch])
 
   // 新增：搜索内容变化时，activeIndex 归零
   useEffect(() => {
