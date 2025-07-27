@@ -1,4 +1,6 @@
 import { forwardRef } from 'react'
+import { NORMAL_KEYS, SEARCH_ENGINE_OPTIONS } from '~const'
+import { useUserOptions } from '~store/options'
 import { Key } from '../../key'
 import HotkeyIcon from './hotkeyIcon'
 
@@ -9,37 +11,10 @@ interface SearchInputProps {
   autoFocus?: boolean
 }
 
-const normalKeys = [
-  'a',
-  'b',
-  'c',
-  'd',
-  'e',
-  'f',
-  'g',
-  'h',
-  'i',
-  'j',
-  'k',
-  'l',
-  'm',
-  'n',
-  'o',
-  'p',
-  'q',
-  'r',
-  's',
-  't',
-  'u',
-  'v',
-  'w',
-  'x',
-  'y',
-  'z',
-]
-
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) => {
   const { value, onChange } = props
+
+  const [userOptions] = useUserOptions()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // 允许通过 onChange 更新值，但阻止事件冒泡
@@ -50,7 +25,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key.toLowerCase()
 
-    if (normalKeys.includes(key)) {
+    if (NORMAL_KEYS.includes(key)) {
       e.stopPropagation()
     }
   }
@@ -75,6 +50,8 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
     e.stopPropagation()
   }
 
+  const searchEngineName = SEARCH_ENGINE_OPTIONS.find(item => item.value === userOptions?.searchEngine)?.label
+
   return (
     <div className="flex items-center gap-1 w-full px-3">
       <input
@@ -92,7 +69,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
         placeholder="搜索标签页、历史、书签..."
       />
       <div className="flex items-center text-gray-400 dark:text-gray-500 gap-2">
-        <span>Google</span>
+        <span>{searchEngineName}</span>
         <HotkeyIcon keys={[Key.Shift, Key.Enter]} />
       </div>
     </div>

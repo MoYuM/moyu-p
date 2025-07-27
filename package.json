@@ -17,6 +17,7 @@
     "@plasmohq/messaging": "^0.7.1",
     "@plasmohq/storage": "^1.15.0",
     "ahooks": "^3.8.4",
+    "antd": "^5.26.6",
     "clsx": "^2.1.1",
     "debounce-promise": "^3.1.2",
     "fuse.js": "^7.1.0",

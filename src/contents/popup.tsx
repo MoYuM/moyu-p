@@ -9,8 +9,9 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
 import Clock from 'react:/assets/clock.svg'
-import { Key } from '../key'
+import { useUserOptions } from '~store/options'
 
+import { Key } from '../key'
 import FaviconImg from './components/faviconImg'
 import SearchInput from './components/searchInput'
 
@@ -45,18 +46,14 @@ function Popup() {
   const [list, setList] = useState<SearchResult[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
-  // 新增：区分键盘/鼠标导航
   const [isKeyboardNav, setIsKeyboardNav] = useState(true)
-  // 新增：本地搜索相关状态
-  // const [allData, setAllData] = useState<SearchResult[]>([])
-  // const [isDataLoaded, setIsDataLoaded] = useState(false)
 
   const inputRef = useRef<HTMLInputElement>(null)
   const isMoved = useRef(false)
-  // 新增：每个结果项的ref
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
-  // 新增：Fuse搜索实例（使用预生成索引）
   const fuseRef = useRef<Fuse<SearchResult> | null>(null)
+
+  const [userOptions] = useUserOptions()
 
   // 新增：本地搜索函数
   const handleSearch = (keyword: string) => {
@@ -84,17 +81,7 @@ function Popup() {
       }
     }
 
-    // 排序：tab/history按时间，书签永远排最后
-    // const tabAndHistory = deduped.filter(i => i.type !== 'bookmark')
-    // const bookmarksOnly = deduped.filter(i => i.type === 'bookmark')
-    // const sortedTabAndHistory = tabAndHistory.sort((a, b) => {
-    //   const aTime = a.lastAccessed || a.lastVisitTime || a.dateAdded || 0
-    //   const bTime = b.lastAccessed || b.lastVisitTime || b.dateAdded || 0
-    //   return bTime - aTime
-    // })
-    // const sortedResults = [...sortedTabAndHistory, ...bookmarksOnly]
     setList([...tabs, ...others])
-    // setList(sortedResults.slice(0, 50))
   }
 
   useEffect(() => {
@@ -121,9 +108,24 @@ function Popup() {
   // -------- handler --------
 
   const handleDirectSearch = () => {
+    let searchUrl = ''
+    switch (userOptions?.searchEngine) {
+      case 'google':
+        searchUrl = `https://www.google.com/search?q=${searchQuery}`
+        break
+      case 'bing':
+        searchUrl = `https://www.bing.com/search?q=${searchQuery}`
+        break
+      case 'baidu':
+        searchUrl = `https://www.baidu.com/s?wd=${searchQuery}`
+        break
+      default:
+        searchUrl = `https://www.google.com/search?q=${searchQuery}`
+        break
+    }
     sendToBackground({
       name: 'new-tab',
-      body: { url: `https://www.google.com/search?q=${searchQuery}` },
+      body: { url: searchUrl },
     })
     handleClose()
   }
