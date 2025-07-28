@@ -284,7 +284,7 @@ function Popup() {
         <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl max-h-96 min-h-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {list?.map((item, index) => (
             <div
-              key={item.id}
+              key={`${item.id}-${item.url}`}
               ref={el => itemRefs.current[index] = el}
               className={clsx(
                 'flex items-center justify-between gap-2 px-3 py-2 rounded-xl cursor-pointer',
