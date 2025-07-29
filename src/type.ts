@@ -1,5 +1,5 @@
 export interface SearchResult {
-  type: 'tab' | 'history' | 'bookmark'
+  type: 'tab' | 'history' | 'bookmark' | 'search'
   id: string
   title: string
   url: string
