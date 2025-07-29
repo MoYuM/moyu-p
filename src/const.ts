@@ -1,5 +1,3 @@
-import type { UserOptions } from '~store/options'
-
 export enum MESSAGE_ENUM {
   /**
    * 打开弹窗
@@ -42,13 +40,6 @@ export const KEYS = {
 export type KeyType = typeof KEYS[keyof typeof KEYS]
 
 /**
- * 默认配置
- */
-export const DEFAULT_OPTIONS: UserOptions = {
-  searchEngine: 'google',
-}
-
-/**
  * 禁止冒泡的键
  */
 export const NORMAL_KEYS = [
@@ -87,4 +78,10 @@ export const SEARCH_ENGINE_OPTIONS = [
   { label: 'Google', value: 'google' },
   { label: 'Bing', value: 'bing' },
   { label: 'Baidu', value: 'baidu' },
+]
+
+export const APPEARANCE_OPTIONS = [
+  { label: '系统', value: 'system' },
+  { label: '浅色', value: 'light' },
+  { label: '深色', value: 'dark' },
 ]
