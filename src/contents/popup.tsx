@@ -9,6 +9,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
 import Clock from 'react:/assets/clock.svg'
+import { useTheme } from '~hooks/useTheme'
 import { useUserOptions } from '~store/options'
 
 import { Key } from '../key'
@@ -54,6 +55,9 @@ function Popup() {
   const fuseRef = useRef<Fuse<SearchResult> | null>(null)
 
   const [userOptions] = useUserOptions()
+
+  // 切换主题
+  const [theme] = useTheme()
 
   // 新增：本地搜索函数
   const handleSearch = (keyword: string) => {
@@ -265,7 +269,7 @@ function Popup() {
 
   return (
     <div
-      className="fixed left-0 top-0 w-screen h-screen z-[9999]"
+      className={`fixed left-0 top-0 w-screen h-screen z-[9999] ${theme}`}
       style={{ display: open ? 'block' : 'none' }}
       onClick={handleClose}
     >

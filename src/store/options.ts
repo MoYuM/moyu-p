@@ -1,13 +1,22 @@
 import { Storage } from '@plasmohq/storage'
 import { useStorage } from '@plasmohq/storage/hook'
-import { DEFAULT_OPTIONS } from '../const'
 
 export const userOptionStorage = new Storage()
 
 export const STORAGE_KEY = 'userOptions'
 
+/**
+ * 默认配置
+ */
+export const DEFAULT_OPTIONS: UserOptions = {
+  searchEngine: 'google',
+  appearance: 'system',
+}
+
 export interface UserOptions {
   searchEngine: 'google' | 'bing' | 'baidu'
+  /** 外观 */
+  appearance: 'light' | 'dark' | 'system'
 }
 
 export async function getUserOptions() {
