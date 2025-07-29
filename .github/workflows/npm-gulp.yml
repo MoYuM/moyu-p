@@ -28,5 +28,6 @@ jobs:
     - name: Build
       run: |
         pnpm i
+        pnpm dlx pnpm-approve-builds
         pnpm build
         pnpm package
