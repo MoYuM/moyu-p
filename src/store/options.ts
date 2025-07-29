@@ -14,6 +14,7 @@ export const DEFAULT_OPTIONS: UserOptions = {
 }
 
 export interface UserOptions {
+  /** 搜索引擎 */
   searchEngine: 'google' | 'bing' | 'baidu'
   /** 外观 */
   appearance: 'light' | 'dark' | 'system'

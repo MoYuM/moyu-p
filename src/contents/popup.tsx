@@ -9,9 +9,9 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
 import Clock from 'react:/assets/clock.svg'
-import { useTheme } from '~hooks/useTheme'
-import { useUserOptions } from '~store/options'
+import { useSearchEngine } from '~hooks/useSearchEngine'
 
+import { useTheme } from '~hooks/useTheme'
 import { Key } from '../key'
 import FaviconImg from './components/faviconImg'
 import SearchInput from './components/searchInput'
@@ -54,39 +54,10 @@ function Popup() {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([])
   const fuseRef = useRef<Fuse<SearchResult> | null>(null)
 
-  const [userOptions] = useUserOptions()
-
+  // 搜索引擎配置
+  const { getSearchItem, getSearchUrl } = useSearchEngine()
   // 切换主题
   const [theme] = useTheme()
-
-  // 新增：本地搜索函数
-  const handleSearch = (keyword: string) => {
-    if (!keyword)
-      return
-    if (!fuseRef.current)
-      return
-
-    const searchResults = fuseRef.current.search(keyword)
-    const seenTitle = new Set<string>()
-    // const deduped: SearchResult[] = []
-    const tabs: SearchResult[] = []
-    const others: SearchResult[] = []
-
-    for (const { item } of searchResults) {
-      const title = item.title || item.url
-      if (!seenTitle.has(title)) {
-        seenTitle.add(title)
-        if (item.type === 'tab') {
-          tabs.push(item)
-        }
-        else {
-          others.push(item)
-        }
-      }
-    }
-
-    setList([...tabs, ...others])
-  }
 
   useEffect(() => {
     if (open) {
@@ -109,24 +80,45 @@ function Popup() {
     }
   }, [activeIndex])
 
+  // 新增：本地搜索函数
+  const handleSearch = (keyword: string) => {
+    if (!keyword)
+      return
+    if (!fuseRef.current)
+      return
+
+    const searchResults = fuseRef.current.search(keyword)
+    const seenTitle = new Set<string>()
+    const tabs: SearchResult[] = []
+    const others: SearchResult[] = []
+
+    for (const { item } of searchResults) {
+      const title = item.title || item.url
+      if (!seenTitle.has(title)) {
+        seenTitle.add(title)
+        if (item.type === 'tab') {
+          tabs.push(item)
+        }
+        else {
+          others.push(item)
+        }
+      }
+    }
+
+    const newList = [...tabs, ...others]
+
+    if (newList.length === 0 && keyword.trim()) {
+      const searchItem = getSearchItem(keyword)
+      newList.push(searchItem)
+    }
+
+    setList(newList)
+  }
+
   // -------- handler --------
 
   const handleDirectSearch = () => {
-    let searchUrl = ''
-    switch (userOptions?.searchEngine) {
-      case 'google':
-        searchUrl = `https://www.google.com/search?q=${searchQuery}`
-        break
-      case 'bing':
-        searchUrl = `https://www.bing.com/search?q=${searchQuery}`
-        break
-      case 'baidu':
-        searchUrl = `https://www.baidu.com/s?wd=${searchQuery}`
-        break
-      default:
-        searchUrl = `https://www.google.com/search?q=${searchQuery}`
-        break
-    }
+    const searchUrl = getSearchUrl(searchQuery)
     sendToBackground({
       name: 'new-tab',
       body: { url: searchUrl },
@@ -170,9 +162,6 @@ function Popup() {
       body: { forceRefresh: false },
     })
 
-    // 数据已经包含拼音信息，无需再次处理
-    // setAllData(results)
-
     if (fuseIndex) {
       const parsedIndex = Fuse.parseIndex(fuseIndex)
       fuseRef.current = new Fuse<SearchResult>(results, fuseOptions, parsedIndex)
@@ -191,7 +180,6 @@ function Popup() {
       getRecentTabs()
     }
   }
-
   const handleOpenResult = (item?: SearchResult) => {
     const res = item || list[activeIndex]
     sendToBackground({

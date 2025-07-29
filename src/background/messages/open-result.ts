@@ -1,17 +1,12 @@
 import type { PlasmoMessaging } from '@plasmohq/messaging'
-
-export interface RequestBody {
-  type: 'tab' | 'history' | 'bookmark'
-  id: string
-  url: string
-}
+import type { SearchResult } from '~type'
 
 export interface ResponseBody {
   success: boolean
 }
 
 const handler: PlasmoMessaging.MessageHandler<
-  RequestBody,
+  SearchResult,
   ResponseBody
 > = async (req, res) => {
   const { type, id, url } = req.body
@@ -25,6 +20,7 @@ const handler: PlasmoMessaging.MessageHandler<
 
       case 'history':
       case 'bookmark':
+      case 'search':
         // 在新标签页中打开历史记录或书签
         await chrome.tabs.create({ url })
         break
