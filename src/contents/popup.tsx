@@ -9,6 +9,7 @@ import { useHotkeys } from 'react-hotkeys-hook'
 import Bookmark from 'react:/assets/bookmark.svg'
 import Box from 'react:/assets/box.svg'
 import Clock from 'react:/assets/clock.svg'
+import Search from 'react:/assets/search.svg'
 import { useSearchEngine } from '~hooks/useSearchEngine'
 
 import { useTheme } from '~hooks/useTheme'
@@ -16,10 +17,11 @@ import { Key } from '../key'
 import FaviconImg from './components/faviconImg'
 import SearchInput from './components/searchInput'
 
-const IconMap = {
+const IconMap: Record<SearchResult['type'], any> = {
   tab: Box,
   history: Clock,
   bookmark: Bookmark,
+  search: Search,
 }
 
 const fuseOptions: IFuseOptions<SearchResult> = {
