@@ -1,4 +1,4 @@
-name: NodeJS with Gulp
+name: Build and Publish Moyu Search
 
 on:
   push:
@@ -7,26 +7,11 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  publish:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x]
-
+    
     steps:
-    - uses: actions/checkout@v4
-    - uses: pnpm/action-setup@v4
-      with:
-        version: 10.10.0
-
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: Build
-      run: |
-        pnpm i
-        pnpm build
-        pnpm package
+      - name: Browser Platform Publish
+        uses: PlasmoHQ/bpp@v3
+        with:
+          keys: ${{ secrets.BPP_KEYS }}
