@@ -192,13 +192,12 @@ function Popup() {
   }
 
   const handleCtrlP = () => {
-    if (!open) {
-      handleOpen()
-    }
-
     if (open) {
       isMoved.current = true
       handleNext()
+    }
+    else {
+      handleOpen()
     }
   }
 
@@ -247,10 +246,12 @@ function Popup() {
 
   // Ctrl+P 快捷键处理
   useHotkeys(`${Control}+p`, handleCtrlP, {
+    document,
     enableOnFormTags: true,
+    enableOnContentEditable: true,
     preventDefault: true,
     description: '打开搜索框继续按下则选择下一个，直到松开则打开结果，类似 vscode 的 cmd+p',
-  })
+  }, [open, list.length])
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
