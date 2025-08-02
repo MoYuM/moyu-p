@@ -7,12 +7,11 @@ import HotkeyIcon from './hotkeyIcon'
 interface SearchInputProps {
   value: string
   onChange: (value: string) => void
-  placeholder?: string
-  autoFocus?: boolean
+  onKeyUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) => {
-  const { value, onChange } = props
+  const { value, onChange, onKeyUp } = props
 
   const [userOptions] = useUserOptions()
 
@@ -25,9 +24,18 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const key = e.key.toLowerCase()
 
+    // 不要阻止 ctrl+p 事件冒泡
+    if (e.ctrlKey && e.key.toLowerCase() === 'p') {
+      return
+    }
+
     if (NORMAL_KEYS.includes(key)) {
       e.stopPropagation()
     }
+  }
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    onKeyUp?.(e)
   }
 
   const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
@@ -66,7 +74,9 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
         onCompositionEnd={handleCompositionEnd}
         onCompositionUpdate={handleCompositionUpdate}
         onKeyDown={handleKeyDown}
+        onKeyUp={handleKeyUp}
         placeholder="搜索标签页、历史、书签..."
+        autoFocus={false}
       />
       <div className="flex items-center text-gray-400 dark:text-gray-500 gap-2">
         <span>{searchEngineName}</span>

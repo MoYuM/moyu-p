@@ -42,7 +42,7 @@ export function getStyle() {
   return style
 }
 
-const { ArrowUp, ArrowDown, Enter, Escape, Shift } = Key
+const { ArrowUp, ArrowDown, Enter, Escape, Shift, Control } = Key
 
 function Popup() {
   const [open, setOpen] = useState(false)
@@ -191,6 +191,23 @@ function Popup() {
     handleClose()
   }
 
+  const handleCtrlP = () => {
+    if (!open) {
+      handleOpen()
+    }
+
+    if (open) {
+      isMoved.current = true
+      handleNext()
+    }
+  }
+
+  const handleKeyUp = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === Control && isMoved.current) {
+      handleOpenResult()
+    }
+  }
+
   // -------- 快捷键 --------
 
   useHotkeys(Escape, handleClose, {
@@ -229,25 +246,11 @@ function Popup() {
   })
 
   // Ctrl+P 快捷键处理
-  useHotkeys('ctrl+p', () => {
-    if (!open) {
-      handleOpen()
-    }
-    else {
-      isMoved.current = true
-      handleNext()
-    }
-  }, {
+  useHotkeys(`${Control}+p`, handleCtrlP, {
     enableOnFormTags: true,
-    enabled: !open,
-  }, [open])
-
-  // Ctrl+P 释放时处理
-  useHotkeys('ctrl+p', () => {
-    if (isMoved.current) {
-      handleOpenResult(list[activeIndex])
-    }
-  }, { keyup: true, enabled: open, enableOnFormTags: true })
+    preventDefault: true,
+    description: '打开搜索框继续按下则选择下一个，直到松开则打开结果，类似 vscode 的 cmd+p',
+  })
 
   // 根据搜索结果类型获取图标
   const getResultIcon = (item: SearchResult) => {
@@ -274,6 +277,7 @@ function Popup() {
           ref={inputRef}
           value={searchQuery}
           onChange={handleSearchQueryChange}
+          onKeyUp={handleKeyUp}
         />
         <div className="flex flex-col gap-1 mt-2 overflow-y-auto rounded-xl max-h-96 min-h-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           {list?.map((item, index) => (
