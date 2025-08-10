@@ -3,7 +3,7 @@
   "displayName": "Moyu search",
   "version": "0.0.3",
   "packageManager": "pnpm@10.10.0",
-  "description": "A omni search extension for chrome",
+  "description": "A better tab search",
   "author": "moyum",
   "scripts": {
     "dev": "plasmo dev",
