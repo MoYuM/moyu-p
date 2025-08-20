@@ -1,0 +1,98 @@
+{
+  "extensionName": {
+    "message": "Moyu Search",
+    "description": "Name of the extension"
+  },
+  "extensionDescription": {
+    "message": "A better tab search experience",
+    "description": "Description of the extension"
+  },
+  "popup": {
+    "message": "Logic is the beginning of wisdom, not the end.",
+    "description": "Popup message"
+  },
+  "settings": {
+    "message": "⚙️ Settings",
+    "description": "Settings title"
+  },
+  "searchEngine": {
+    "message": "Search Engine",
+    "description": "Search engine label"
+  },
+  "appearance": {
+    "message": "Appearance",
+    "description": "Appearance label"
+  },
+  "selectSearchEngine": {
+    "message": "Please select search engine",
+    "description": "Search engine selection placeholder"
+  },
+  "selectAppearance": {
+    "message": "Please select appearance",
+    "description": "Appearance selection placeholder"
+  },
+  "searchPlaceholder": {
+    "message": "Search tabs, history, bookmarks...",
+    "description": "Search input placeholder"
+  },
+  "noResults": {
+    "message": "No results found",
+    "description": "No results message"
+  },
+  "tab": {
+    "message": "Tab",
+    "description": "Tab type"
+  },
+  "history": {
+    "message": "History",
+    "description": "History type"
+  },
+  "bookmark": {
+    "message": "Bookmark",
+    "description": "Bookmark type"
+  },
+  "search": {
+    "message": "Search",
+    "description": "Search type"
+  },
+  "openInNewTab": {
+    "message": "Open in new tab",
+    "description": "Open in new tab tooltip"
+  },
+  "switchToTab": {
+    "message": "Switch to tab",
+    "description": "Switch to tab tooltip"
+  },
+  "copyUrl": {
+    "message": "Copy URL",
+    "description": "Copy URL tooltip"
+  },
+  "shortcuts": {
+    "message": "Shortcuts",
+    "description": "Shortcuts title"
+  },
+  "shortcutUp": {
+    "message": "↑ Up",
+    "description": "Up shortcut"
+  },
+  "shortcutDown": {
+    "message": "↓ Down",
+    "description": "Down shortcut"
+  },
+  "shortcutEnter": {
+    "message": "Enter to open",
+    "description": "Enter to open shortcut"
+  },
+  "shortcutEscape": {
+    "message": "Esc to close",
+    "description": "Esc to close shortcut"
+  },
+  "language": {
+    "message": "Language",
+    "description": "Language label"
+  },
+  "selectLanguage": {
+    "message": "Please select language",
+    "description": "Language selection placeholder"
+  }
+}

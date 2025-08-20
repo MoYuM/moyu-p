@@ -1,6 +1,7 @@
 import { forwardRef } from 'react'
 import { NORMAL_KEYS, SEARCH_ENGINE_OPTIONS } from '~const'
 import { useUserOptions } from '~store/options'
+import { t } from '~utils/i18n'
 import { Key } from '../../key'
 import HotkeyIcon from './hotkeyIcon'
 
@@ -75,7 +76,7 @@ const SearchInput = forwardRef<HTMLInputElement, SearchInputProps>((props, ref) 
         onCompositionUpdate={handleCompositionUpdate}
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
-        placeholder="搜索标签页、历史、书签..."
+        placeholder={t('searchPlaceholder')}
         autoFocus={false}
       />
       <div className="flex items-center text-gray-400 dark:text-gray-500 gap-2">

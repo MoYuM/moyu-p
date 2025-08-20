@@ -1,9 +1,9 @@
 {
   "name": "moyu-search",
-  "displayName": "Moyu search",
+  "displayName": "__MSG_extensionName__",
   "version": "0.0.4",
   "packageManager": "pnpm@10.10.0",
-  "description": "A better tab search",
+  "description": "__MSG_extensionDescription__",
   "author": "moyum",
   "scripts": {
     "dev": "plasmo dev",
@@ -52,6 +52,9 @@
     ]
   },
   "manifest": {
+    "name": "__MSG_extensionName__",
+    "description": "__MSG_extensionDescription__",
+    "default_locale": "zh-CN",
     "host_permissions": [
       "https://*/*"
     ],

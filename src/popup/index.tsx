@@ -1,8 +1,9 @@
 import { ConfigProvider, Divider, Form, Layout, Select, theme, Typography } from 'antd'
 import { useEffect } from 'react'
-import { APPEARANCE_OPTIONS, SEARCH_ENGINE_OPTIONS } from '~const'
+import { APPEARANCE_OPTIONS, LANGUAGE_OPTIONS, SEARCH_ENGINE_OPTIONS } from '~const'
 import { useTheme } from '~hooks/useTheme'
 import { getUserOptions, setUserOptions } from '~store/options'
+import { t } from '~utils/i18n'
 import { version } from '../../package.json'
 import './index.css'
 
@@ -34,7 +35,7 @@ function IndexPopup() {
     <ConfigProvider theme={{ algorithm: algorithmMap[theme] }}>
       <Layout className="w-[300px] h-[450px] p-4">
         <div className="flex justify-between items-center">
-          <Title level={5}>⚙️ 配置</Title>
+          <Title level={5}>{t('settings')}</Title>
           <div className="text-sm text-gray-500">
             v
             {version}
@@ -51,16 +52,22 @@ function IndexPopup() {
             handleFormChange(allValues)
           }}
         >
-          <Form.Item label="搜索引擎" name="searchEngine" className="w-full">
+          <Form.Item label={t('searchEngine')} name="searchEngine" className="w-full">
             <Select
               options={SEARCH_ENGINE_OPTIONS}
-              placeholder="请选择搜索引擎"
+              placeholder={t('selectSearchEngine')}
             />
           </Form.Item>
-          <Form.Item label="外观" name="appearance" className="w-full">
+          <Form.Item label={t('appearance')} name="appearance" className="w-full">
             <Select
               options={APPEARANCE_OPTIONS}
-              placeholder="请选择外观"
+              placeholder={t('selectAppearance')}
+            />
+          </Form.Item>
+          <Form.Item label={t('language')} name="language" className="w-full">
+            <Select
+              options={LANGUAGE_OPTIONS}
+              placeholder={t('selectLanguage')}
             />
           </Form.Item>
         </Form>

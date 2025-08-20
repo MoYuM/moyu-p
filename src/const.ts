@@ -85,3 +85,9 @@ export const APPEARANCE_OPTIONS = [
   { label: '浅色', value: 'light' },
   { label: '深色', value: 'dark' },
 ]
+
+export const LANGUAGE_OPTIONS = [
+  { label: '自动', value: 'auto' },
+  { label: '中文', value: 'zh-CN' },
+  { label: 'English', value: 'en' },
+]
