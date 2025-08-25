@@ -1,3 +1,5 @@
+import { t } from '~utils/i18n'
+
 export enum MESSAGE_ENUM {
   /**
    * 打开弹窗
@@ -81,13 +83,7 @@ export const SEARCH_ENGINE_OPTIONS = [
 ]
 
 export const APPEARANCE_OPTIONS = [
-  { label: '系统', value: 'system' },
-  { label: '浅色', value: 'light' },
-  { label: '深色', value: 'dark' },
-]
-
-export const LANGUAGE_OPTIONS = [
-  { label: '自动', value: 'auto' },
-  { label: '中文', value: 'zh-CN' },
-  { label: 'English', value: 'en' },
+  { label: t('configAppearanceSystem'), value: 'system' },
+  { label: t('configAppearanceLight'), value: 'light' },
+  { label: t('configAppearanceDark'), value: 'dark' },
 ]

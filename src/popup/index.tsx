@@ -1,6 +1,6 @@
 import { ConfigProvider, Divider, Form, Layout, Select, theme, Typography } from 'antd'
 import { useEffect } from 'react'
-import { APPEARANCE_OPTIONS, LANGUAGE_OPTIONS, SEARCH_ENGINE_OPTIONS } from '~const'
+import { APPEARANCE_OPTIONS, SEARCH_ENGINE_OPTIONS } from '~const'
 import { useTheme } from '~hooks/useTheme'
 import { getUserOptions, setUserOptions } from '~store/options'
 import { t } from '~utils/i18n'
@@ -46,8 +46,8 @@ function IndexPopup() {
           form={form}
           layout="inline"
           size="small"
-          labelCol={{ span: 8 }}
-          wrapperCol={{ span: 16 }}
+          labelCol={{ span: 10 }}
+          wrapperCol={{ span: 14 }}
           onValuesChange={(_, allValues) => {
             handleFormChange(allValues)
           }}
@@ -62,12 +62,6 @@ function IndexPopup() {
             <Select
               options={APPEARANCE_OPTIONS}
               placeholder={t('selectAppearance')}
-            />
-          </Form.Item>
-          <Form.Item label={t('language')} name="language" className="w-full">
-            <Select
-              options={LANGUAGE_OPTIONS}
-              placeholder={t('selectLanguage')}
             />
           </Form.Item>
         </Form>

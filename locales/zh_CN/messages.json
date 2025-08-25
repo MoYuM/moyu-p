@@ -1,50 +1,58 @@
 {
   "extensionName": {
-    "message": "Moyu Search",
+    "message": "摸鱼搜索",
     "description": "扩展的名字"
   },
   "extensionDescription": {
-    "message": "A better tab search experience",
+    "message": "中文友好的标签页搜索扩展",
     "description": "扩展的描述"
   },
   "popup": {
-    "message": "Logic is the beginning of wisdom, not the end.",
+    "message": "逻辑是智慧的开始，而不是结束。",
     "description": "弹窗的消息"
   },
   "settings": {
-    "message": "⚙️ Settings",
+    "message": "⚙️ 配置",
     "description": "设置标题"
   },
   "searchEngine": {
-    "message": "Search Engine",
+    "message": "搜索引擎",
     "description": "搜索引擎标签"
   },
   "appearance": {
-    "message": "Appearance",
+    "message": "外观",
     "description": "外观标签"
   },
   "selectSearchEngine": {
-    "message": "Please select search engine",
+    "message": "请选择搜索引擎",
     "description": "搜索引擎选择提示"
   },
   "selectAppearance": {
-    "message": "Please select appearance",
+    "message": "请选择外观",
     "description": "外观选择提示"
   },
   "searchPlaceholder": {
-    "message": "Search tabs, history, bookmarks...",
+    "message": "搜索标签页、历史记录、书签...",
     "description": "搜索框占位符"
   },
+  "noResults": {
+    "message": "没有找到结果",
+    "description": "无结果提示"
+  },
+  "configLanguage": {
+    "message": "语言",
+    "description": "设置语言标题"
+  },
   "configAppearanceSystem": {
-    "message": "System",
+    "message": "系统",
     "description": "系统外观"
   },
   "configAppearanceLight": {
-    "message": "Light",
+    "message": "浅色",
     "description": "浅色外观"
   },
   "configAppearanceDark": {
-    "message": "Dark",
+    "message": "深色",
     "description": "深色外观"
   }
 }

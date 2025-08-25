@@ -54,7 +54,6 @@
   "manifest": {
     "name": "__MSG_extensionName__",
     "description": "__MSG_extensionDescription__",
-    "default_locale": "zh-CN",
     "host_permissions": [
       "https://*/*"
     ],
